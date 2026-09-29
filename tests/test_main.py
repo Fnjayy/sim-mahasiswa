@@ -1,40 +1,111 @@
-import sys
-from pathlib import Path
-
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-
-from models import DaftarMahasiswa, Mahasiswa
+from src.models import DaftarMahasiswa, Mahasiswa
 
 
-def test_mahasiswa_validasi_ipk():
-    with pytest.raises(ValueError, match="IPK harus 0.0-4.0"):
-        Mahasiswa("202310001", "Andi", "TI", 2023, 4.5)
+class TestMahasiswa:
+    def test_buat_mahasiswa_valid(self):
+        mhs = Mahasiswa(
+            "20241320042",
+            "Muhammad Fajar",
+            "Sistem Informasi",
+            2024,
+            3.50,
+        )
+        assert mhs.nim == "20241320042"
+        assert mhs.ipk == 3.50
+
+    def test_nim_tidak_valid(self):
+        with pytest.raises(ValueError):
+            Mahasiswa("abc", "Test", "SI", 2024, 3.0)
+
+    def test_nim_kosong(self):
+        with pytest.raises(ValueError):
+            Mahasiswa("", "Test", "SI", 2024, 3.0)
+
+    def test_nama_sangat_panjang(self):
+        nama = "A" * 200
+
+        mhs = Mahasiswa(
+            "20241320043",
+            nama,
+            "Sistem Informasi",
+            2024,
+            3.0,
+        )
+
+        assert mhs.nama == nama
+
+    def test_ipk_boundary_minimum(self):
+        mhs = Mahasiswa(
+            "20241320044",
+            "Boundary Min",
+            "SI",
+            2024,
+            0.0,
+        )
+
+        assert mhs.ipk == 0.0
+
+    def test_ipk_boundary_maksimum(self):
+        mhs = Mahasiswa(
+            "20241320045",
+            "Boundary Max",
+            "SI",
+            2024,
+            4.0,
+        )
+
+        assert mhs.ipk == 4.0
+
+    def test_ipk_diluar_range(self):
+        with pytest.raises(ValueError):
+            Mahasiswa("20241320042", "Test", "SI", 2024, 5.0)
 
 
-def test_tambah_mahasiswa_baru():
-    db = DaftarMahasiswa()
-    mhs = Mahasiswa("202310001", "Andi", "TI", 2023, 3.75)
+class TestDaftarMahasiswa:
+    def test_tambah_dan_cari(self):
+        db = DaftarMahasiswa()
+        mhs = Mahasiswa("20241320042", "Muhammad Fajar", "Sistem Informasi", 2024)
+        db.tambah(mhs)
+        assert db.cari("20241320042") == mhs
+        assert db.jumlah == 1
 
-    db.tambah(mhs)
+    def test_nim_duplikat(self):
+        db = DaftarMahasiswa()
+        m1 = Mahasiswa("20241320042", "Muhammad Fajar", "Sistem Informasi", 2024)
+        m2 = Mahasiswa("20241320042", "Fajar", "Sistem Informasi", 2024)
+        db.tambah(m1)
+        with pytest.raises(ValueError):
+            db.tambah(m2)
 
-    assert db.jumlah == 1
-    assert db.cari("202310001") == mhs
+    def test_cari_nim_tidak_ada(self):
+        db = DaftarMahasiswa()
 
+        assert db.cari("99999999999") is None
 
-def test_tambah_nim_duplikat_raises():
-    db = DaftarMahasiswa()
-    db.tambah(Mahasiswa("202310001", "Andi", "TI", 2023, 3.75))
+    def test_hapus_nim_tidak_ada(self):
+        db = DaftarMahasiswa()
 
-    with pytest.raises(ValueError, match="sudah terdaftar"):
-        db.tambah(Mahasiswa("202310001", "Budi", "SI", 2024, 3.8))
+        assert db.hapus("99999999999") is False
 
+    def test_edit_ipk_berhasil(self):
+        db = DaftarMahasiswa()
 
-def test_hapus_mahasiswa():
-    db = DaftarMahasiswa()
-    db.tambah(Mahasiswa("202310001", "Andi", "TI", 2023, 3.75))
+        mhs = Mahasiswa(
+            "20241320042",
+            "Muhammad Fajar",
+            "Sistem Informasi",
+            2024,
+            3.0,
+        )
 
-    assert db.hapus("202310001") is True
-    assert db.jumlah == 0
-    assert db.cari("202310001") is None
+        db.tambah(mhs)
+
+        assert db.edit_ipk("20241320042", 3.8) is True
+        assert mhs.ipk == 3.8
+
+    def test_edit_ipk_nim_tidak_ada(self):
+        db = DaftarMahasiswa()
+
+        assert db.edit_ipk("99999999999", 3.5) is False
