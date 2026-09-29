@@ -64,3 +64,12 @@ pytest tests/ -v
 - [x] Repositori Git diinisiasi
 - [x] Push ke GitHub berhasil
 - [x] README.md lengkap
+## Screenshot
+
+### Menu Utama
+
+![Menu Utama](docsmenu-utama.png)
+
+### Daftar Mahasiswa
+
+![Daftar Mahasiswa](docsdaftar-mahasiswa.png)
