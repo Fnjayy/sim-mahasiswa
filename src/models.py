@@ -56,6 +56,17 @@ class DaftarMahasiswa:
             return True
         return False
 
+    def edit_ipk(self, nim: str, ipk_baru: float) -> bool:
+        """Update IPK mahasiswa berdasarkan NIM."""
+        if not (0.0 <= ipk_baru <= 4.0):
+            raise ValueError("IPK harus berada pada rentang 0.0 - 4.0")
+
+        mhs = self.cari(nim)
+        if mhs:
+            mhs.ipk = ipk_baru
+            return True
+        return False
+
     @property
     def jumlah(self) -> int:
         return len(self.data)
